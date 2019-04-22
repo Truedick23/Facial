@@ -71,7 +71,6 @@ def from_cam():
 
                 (success, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points, camera_matrix,
                                                                               dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
-
                 (nose_end_point2D, jacobian) = cv2.projectPoints(np.array([(0.0, 0.0, 1000.0)]), rotation_vector,
                                                                  translation_vector, camera_matrix, dist_coeffs)
 
@@ -81,7 +80,27 @@ def from_cam():
                 p1 = (int(image_points[0][0]), int(image_points[0][1]))
                 p2 = (int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
 
+                vmargin = p1[1] - p2[1]
+                hmargin = p1[0] - p2[0]
+
+                if abs(vmargin) < 0.01 :
+                    vtext = '-'
+                elif vmargin > 0:
+                    vtext = 'Up'
+                elif vmargin < 0:
+                    vtext = 'Down'
+
+                if abs(hmargin) < 0.01 :
+                    htext = '-'
+                elif hmargin > 0:
+                    htext = 'Right'
+                elif hmargin < 0:
+                    htext = 'Left'
+
                 cv2.line(im, p1, p2, (255, 0, 0), 2)
+
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                cv2.putText(im, vtext + " " + htext, (100, 80), font, 0.8, (255, 255, 255), 2)
                 # Hit 'q' on the keyboard to quit!
             out.write(im)
             cv2.imshow('Video', im)
@@ -173,8 +192,6 @@ def get_head_pose(person, direction):
             ])
     '''
 
-
-
     pic_name = face['PicName']
     points = face['FacialLandmarks']
 
@@ -254,7 +271,7 @@ def get_head_pose(person, direction):
     p1 = (int(image_points[0][0]), int(image_points[0][1]))
     p2 = (int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
 
-    '''
+
     predict = 0
     if p2[1] < p1[1]:
         predict = 1
@@ -279,20 +296,18 @@ def get_head_pose(person, direction):
             print((abs(p2[0] - p1[0])) / abs(p2[1] - p1[1]), pic_name)
         except:
             print(pic_name)
-    '''
+
 
     cv2.line(im, p1, p2, (255, 0, 0), 2)
 
-    '''
+
     faces_info.update_one(
         {'PicName': pic_name},
         {'$set': {'Predict': predict, 'Actual': actual}}
     )
-    '''
-
 
     # Display image
-    cv2.imwrite('F:/FacialData/Posed/8/' + pic_name, im, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+    #cv2.imwrite('F:/FacialData/Posed/8/' + pic_name, im, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
     print(pic_name)
 
 def get_average_marks():
@@ -380,4 +395,4 @@ def process():
             get_head_pose(person, direction)
 
 if __name__ == '__main__':
-    process()
+    from_cam()
